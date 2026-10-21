@@ -55,8 +55,9 @@ function isErrorEnvelope(body: unknown): body is ApiErrorEnvelope {
 
 /** For responses without the error envelope, which the API itself always sends. */
 function fallbackError(status: number): { code: string; message: string } {
-  if (status >= 500) {
-    // Most likely the Next.js proxy couldn't reach the backend at all.
+  if (status >= 500 || status === 404) {
+    // Most likely the Next.js proxy couldn't reach the backend at all (a 404 without our
+    // envelope comes from the hosting platform, e.g. a backend that isn't deployed).
     return {
       code: "API_UNREACHABLE",
       message: `The server didn't get an answer from the API (HTTP ${status}). It may be starting up or offline.`,
@@ -170,7 +171,7 @@ export function getModelInfo(signal?: AbortSignal): Promise<ModelInfo> {
 
 export async function getHealth(signal?: AbortSignal): Promise<HealthReport> {
   const response = await send("/health", { signal });
-  // A degraded or down API still answers with its health report (HTTP 503).
+  // A down API still answers with its health report (HTTP 503; degraded is a 200).
   // That report is data to display, not a failed request.
   if (response.ok || response.status === 503) {
     const body: unknown = await response

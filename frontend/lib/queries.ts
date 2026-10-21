@@ -7,7 +7,7 @@ import {
   getPrediction,
   getPredictions,
 } from "./api";
-import { toApiParams, type Filters } from "./filters";
+import { dateRangeError, toApiParams, type Filters } from "./filters";
 
 // Query keys and fetch functions in one place, so every view that shows the same
 // data shares one cache entry, and mutations know exactly what to invalidate.
@@ -44,6 +44,8 @@ export function summaryQuery(filters: Filters, options: { live?: boolean } = {})
     // quick range like "last 24h" is re-evaluated on every refetch.
     queryKey: [...queryKeys.analytics, "summary", filters],
     queryFn: ({ signal }) => getAnalyticsSummary(toApiParams(filters), signal),
+    // "From" after "To" is already flagged in the filter bar; don't send a request the API rejects.
+    enabled: !dateRangeError(filters),
     placeholderData: keepPreviousData,
     refetchInterval: options.live ? DASHBOARD_REFRESH_MS : false,
   });
@@ -59,6 +61,7 @@ export function predictionsQuery(
     queryKey: [...queryKeys.predictions, "list", { filters, page, pageSize }],
     queryFn: ({ signal }) =>
       getPredictions({ ...toApiParams(filters), page, page_size: pageSize }, signal),
+    enabled: !dateRangeError(filters),
     placeholderData: keepPreviousData,
     refetchInterval: options.live ? DASHBOARD_REFRESH_MS : false,
   });

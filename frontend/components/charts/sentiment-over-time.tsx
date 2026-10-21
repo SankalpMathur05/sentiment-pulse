@@ -45,7 +45,7 @@ export function SentimentOverTime({
           minTickGap={24}
           label={{
             ...AXIS_LABEL,
-            value: granularity === "hour" ? "Hour (local time)" : "Day (local time)",
+            value: granularity === "hour" ? "Hour (UTC)" : "Day (UTC)",
             position: "insideBottom",
             offset: -12,
           }}

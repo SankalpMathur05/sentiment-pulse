@@ -2,3 +2,6 @@ node_modules
 .next
 coverage
 *.tsbuildinfo
+# local env files (e.g. the Vercel CLI's .env.local token) are never uploaded
+.env*
+!.env.example

@@ -2,7 +2,8 @@ import Papa from "papaparse";
 import { formatBytes, formatNumber } from "./format";
 import type { BatchResultRow, PredictionRecord } from "./types";
 
-export const BATCH_LIMITS = { maxRows: 500, maxBytes: 1024 * 1024 } as const;
+// Must match the API's BATCH_MAX_ROWS / BATCH_MAX_BYTES defaults.
+export const BATCH_LIMITS = { maxRows: 500, maxBytes: 1_000_000 } as const;
 
 const PREVIEW_ROWS = 5;
 

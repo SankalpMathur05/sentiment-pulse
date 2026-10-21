@@ -88,12 +88,21 @@ export function formatDate(iso: string): string {
   return Number.isNaN(date.getTime()) ? EMPTY : dateFormat.format(date);
 }
 
-/** Axis label for a timeseries bucket at the summary's granularity. */
+/**
+ * Axis label for a timeseries bucket at the summary's granularity. The API groups by UTC
+ * hour/day, so labels are shown in UTC too: in a half-hour timezone such as IST a local
+ * label would claim "6 PM" for a bucket that really runs from 5:30 to 6:30.
+ */
 export function formatBucket(iso: string, granularity: "hour" | "day"): string {
   const date = new Date(iso);
   return granularity === "hour"
-    ? date.toLocaleString("en", { month: "short", day: "numeric", hour: "numeric" })
-    : date.toLocaleDateString("en", { month: "short", day: "numeric" });
+    ? date.toLocaleString("en", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        timeZone: "UTC",
+      })
+    : date.toLocaleDateString("en", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 /** "sentiment-logreg@1.2.0+ab12cd34" → "1.2.0+ab12cd34" (the full string goes in a title). */
