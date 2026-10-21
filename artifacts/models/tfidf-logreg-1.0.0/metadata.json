@@ -1,0 +1,400 @@
+{
+  "name": "tfidf-logreg",
+  "semver": "1.0.0",
+  "trained_at": "2026-10-21T12:13:27+00:00",
+  "python_version": "3.13.5",
+  "sklearn_version": "1.9.1",
+  "preprocessing_version": "1.0",
+  "random_state": 42,
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "cleaning_config": {
+    "replace_urls": true,
+    "replace_mentions": true,
+    "keep_hashtag_words": true,
+    "convert_emoji": true,
+    "convert_emoticons": true,
+    "keep_exclaim_question": true,
+    "squash_elongation": true,
+    "mark_negation": false
+  },
+  "hyperparameters": {
+    "clf__C": 2.0,
+    "clf__class_weight": "balanced",
+    "tfidf__min_df": 1,
+    "tfidf__ngram_range": [
+      1,
+      2
+    ]
+  },
+  "dataset": {
+    "name": "Twitter US Airline Sentiment (CrowdFlower / Figure Eight)",
+    "url": "https://huggingface.co/datasets/osanseviero/twitter-airline-sentiment/resolve/main/Tweets.csv",
+    "homepage": "https://www.kaggle.com/datasets/crowdflower/twitter-airline-sentiment",
+    "licence": "CC BY-NC-SA 4.0",
+    "sha256": "ea94b23f41892b290dec3330bb8cf9cb6b8bc669eaae5f3a84c40f7b0de8f15e",
+    "rows_raw": 14640,
+    "rows_after_cleaning": 14232,
+    "rows_train": 11385,
+    "rows_test": 2847,
+    "cleaning_report": {
+      "rows_raw": 14640,
+      "text_artifacts_repaired": 1552,
+      "missing_text": 0,
+      "missing_label": 0,
+      "empty_text": 0,
+      "invalid_label": 0,
+      "duplicate_tweet_id": 155,
+      "duplicate_raw_text": 58,
+      "empty_after_cleaning": 0,
+      "conflicting_label_duplicates_dropped": 153,
+      "duplicate_clean_text_dropped": 100,
+      "rows_final": 14232
+    },
+    "label_distribution_train": {
+      "negative": 7251,
+      "neutral": 2369,
+      "positive": 1765
+    }
+  },
+  "metrics": {
+    "accuracy": 0.8093,
+    "macro_precision": 0.7519,
+    "macro_recall": 0.7567,
+    "macro_f1": 0.7542,
+    "weighted_f1": 0.8096,
+    "per_class": {
+      "negative": {
+        "precision": 0.8829,
+        "recall": 0.8771,
+        "f1": 0.88,
+        "support": 1814
+      },
+      "neutral": {
+        "precision": 0.6548,
+        "recall": 0.6537,
+        "f1": 0.6543,
+        "support": 592
+      },
+      "positive": {
+        "precision": 0.7181,
+        "recall": 0.7392,
+        "f1": 0.7285,
+        "support": 441
+      }
+    },
+    "confusion_matrix": [
+      [
+        1591,
+        146,
+        77
+      ],
+      [
+        154,
+        387,
+        51
+      ],
+      [
+        57,
+        58,
+        326
+      ]
+    ],
+    "confusion_labels": [
+      "negative",
+      "neutral",
+      "positive"
+    ],
+    "log_loss": 0.4988,
+    "brier_score": 0.2785
+  },
+  "comparison": [
+    {
+      "model": "Dummy (always majority class)",
+      "cv_macro_f1": 0.2594,
+      "cv_macro_f1_std": 0.0,
+      "test_macro_f1": 0.2595,
+      "test_accuracy": 0.6372,
+      "selected": false
+    },
+    {
+      "model": "TF-IDF + Complement Naive Bayes",
+      "cv_macro_f1": 0.7353,
+      "cv_macro_f1_std": 0.0085,
+      "test_macro_f1": 0.7222,
+      "test_accuracy": 0.7945,
+      "selected": false
+    },
+    {
+      "model": "TF-IDF + Linear SVM",
+      "cv_macro_f1": 0.7545,
+      "cv_macro_f1_std": 0.0083,
+      "test_macro_f1": 0.7606,
+      "test_accuracy": 0.8198,
+      "selected": false
+    },
+    {
+      "model": "TF-IDF + Logistic Regression",
+      "cv_macro_f1": 0.7585,
+      "cv_macro_f1_std": 0.0091,
+      "test_macro_f1": 0.7542,
+      "test_accuracy": 0.8093,
+      "selected": true
+    },
+    {
+      "model": "TF-IDF words + character n-grams + Logistic Regression",
+      "cv_macro_f1": 0.7612,
+      "cv_macro_f1_std": 0.0076,
+      "test_macro_f1": 0.7627,
+      "test_accuracy": 0.8103,
+      "selected": false
+    }
+  ],
+  "top_features": {
+    "negative": [
+      {
+        "token": "not",
+        "display": "not",
+        "weight": 5.2431
+      },
+      {
+        "token": "no",
+        "display": "no",
+        "weight": 4.834
+      },
+      {
+        "token": "delayed",
+        "display": "delayed",
+        "weight": 4.0679
+      },
+      {
+        "token": "hours",
+        "display": "hours",
+        "weight": 3.6087
+      },
+      {
+        "token": "your",
+        "display": "your",
+        "weight": 3.2824
+      },
+      {
+        "token": "worst",
+        "display": "worst",
+        "weight": 3.1431
+      },
+      {
+        "token": "cancelled",
+        "display": "cancelled",
+        "weight": 3.1157
+      },
+      {
+        "token": "delay",
+        "display": "delay",
+        "weight": 2.8137
+      },
+      {
+        "token": "hold",
+        "display": "hold",
+        "weight": 2.7136
+      },
+      {
+        "token": "luggage",
+        "display": "luggage",
+        "weight": 2.6637
+      },
+      {
+        "token": "on hold",
+        "display": "on hold",
+        "weight": 2.6615
+      },
+      {
+        "token": "again",
+        "display": "again",
+        "weight": 2.6597
+      },
+      {
+        "token": "why",
+        "display": "why",
+        "weight": 2.6217
+      },
+      {
+        "token": "nothing",
+        "display": "nothing",
+        "weight": 2.5984
+      },
+      {
+        "token": "hour",
+        "display": "hour",
+        "weight": 2.5251
+      }
+    ],
+    "neutral": [
+      {
+        "token": "?",
+        "display": "?",
+        "weight": 6.7329
+      },
+      {
+        "token": "<user>",
+        "display": "@mention",
+        "weight": 5.0234
+      },
+      {
+        "token": "can",
+        "display": "can",
+        "weight": 2.7711
+      },
+      {
+        "token": "<url>",
+        "display": "link",
+        "weight": 2.7451
+      },
+      {
+        "token": "hi",
+        "display": "hi",
+        "weight": 2.0344
+      },
+      {
+        "token": "need",
+        "display": "need",
+        "weight": 1.9435
+      },
+      {
+        "token": "? thanks",
+        "display": "? thanks",
+        "weight": 1.9267
+      },
+      {
+        "token": "or",
+        "display": "or",
+        "weight": 1.8812
+      },
+      {
+        "token": "<user> can",
+        "display": "@mention can",
+        "weight": 1.8795
+      },
+      {
+        "token": "policy",
+        "display": "policy",
+        "weight": 1.8711
+      },
+      {
+        "token": "<user> hi",
+        "display": "@mention hi",
+        "weight": 1.8689
+      },
+      {
+        "token": "<user> do",
+        "display": "@mention do",
+        "weight": 1.8625
+      },
+      {
+        "token": "dm",
+        "display": "dm",
+        "weight": 1.8612
+      },
+      {
+        "token": "<user> any",
+        "display": "@mention any",
+        "weight": 1.7773
+      },
+      {
+        "token": "is there",
+        "display": "is there",
+        "weight": 1.773
+      }
+    ],
+    "positive": [
+      {
+        "token": "!",
+        "display": "!",
+        "weight": 7.7226
+      },
+      {
+        "token": "thanks",
+        "display": "thanks",
+        "weight": 7.3081
+      },
+      {
+        "token": "great",
+        "display": "great",
+        "weight": 6.5194
+      },
+      {
+        "token": "awesome",
+        "display": "awesome",
+        "weight": 4.8676
+      },
+      {
+        "token": "<smile>",
+        "display": ":)",
+        "weight": 4.8328
+      },
+      {
+        "token": "love",
+        "display": "love",
+        "weight": 4.5665
+      },
+      {
+        "token": "thank",
+        "display": "thank",
+        "weight": 4.5426
+      },
+      {
+        "token": "amazing",
+        "display": "amazing",
+        "weight": 4.0893
+      },
+      {
+        "token": "thank you",
+        "display": "thank you",
+        "weight": 3.9526
+      },
+      {
+        "token": "thx",
+        "display": "thx",
+        "weight": 2.9079
+      },
+      {
+        "token": "good",
+        "display": "good",
+        "weight": 2.8534
+      },
+      {
+        "token": "best",
+        "display": "best",
+        "weight": 2.6998
+      },
+      {
+        "token": "excellent",
+        "display": "excellent",
+        "weight": 2.5576
+      },
+      {
+        "token": "i love",
+        "display": "i love",
+        "weight": 2.5525
+      },
+      {
+        "token": "appreciate",
+        "display": "appreciate",
+        "weight": 2.5114
+      }
+    ]
+  },
+  "limitations": [
+    "Trained on about 11k English tweets to six US airlines from February 2015. Language, slang, brands and platform conventions have changed since, and other industries talk about different things.",
+    "A bag-of-words model counts words and short phrases; it does not understand meaning. Sarcasm (\"great, another delay\"), irony and long-range negation are frequently misread.",
+    "Mixed posts (praise + complaint) are forced into a single label; there is no 'mixed' class.",
+    "Labels come from crowd annotators and are noisy: about a quarter of tweets have annotator confidence below 1.0, which limits the accuracy any model can reach.",
+    "Confidence scores are estimates. Balanced class weights shift probabilities towards the minority classes, so they are not perfectly calibrated.",
+    "Neutral is the hardest class: it is a mix of questions, information and mild opinions.",
+    "Performance drops sharply on general (non-airline) tweets (see the domain-shift check), so the model should be re-trained or at least re-evaluated before use on another brand or domain."
+  ],
+  "artifact_sha256": "9cb76b11821f532b4c95976f98783d6b4dd8181c8d37a26ce07300428f77a11d",
+  "version": "tfidf-logreg@1.0.0+9cb76b11"
+}
