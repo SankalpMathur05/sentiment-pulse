@@ -1,0 +1,5 @@
+# Normalise line endings so shell scripts and configs work inside Linux containers
+* text=auto eol=lf
+*.joblib binary
+*.png binary
+*.sqlite binary

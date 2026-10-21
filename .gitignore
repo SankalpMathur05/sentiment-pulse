@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files: real values never get committed, only the template
+.env
+.env.*
+!.env.example
+
+# Generated data (fully reproducible from data/raw with `python -m sentiment_ml.pipeline`)
+data/processed/
+data/external/
+
+# Deployment tool state
+.vercel
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
