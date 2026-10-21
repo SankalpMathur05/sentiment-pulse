@@ -80,7 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
 
-    # Added last = outermost, so every request (including CORS preflights) gets an id and a log line.
+    # Only needed when a browser calls the API directly; the Next.js proxy is same-origin.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -88,6 +88,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
         expose_headers=[REQUEST_ID_HEADER, "X-Cache"],  # let the browser app read them
     )
+    # Added last = outermost, so every request (including CORS preflights) gets an id and a log line.
     app.add_middleware(RequestContextMiddleware)
     register_exception_handlers(app)
 

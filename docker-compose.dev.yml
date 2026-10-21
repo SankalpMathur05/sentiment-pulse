@@ -1,0 +1,10 @@
+# Development override: also publish PostgreSQL and Redis on localhost, so the API and
+# tests can run outside Docker against them.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db redis
+services:
+  db:
+    ports:
+      - "5432:5432"
+  redis:
+    ports:
+      - "6379:6379"

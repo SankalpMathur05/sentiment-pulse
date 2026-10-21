@@ -8,6 +8,7 @@
 | **Model** | `tfidf-logreg@1.0.0+9cb76b11`, trained on the Twitter US Airline Sentiment dataset, deterministic (seed 42) |
 | **Stack** | Python · scikit-learn · FastAPI · PostgreSQL 16 · Redis 7 · Next.js · Docker Compose |
 | **Run it** | `docker compose up --build`, then open http://localhost:3000 |
+| **Live demo** | https://sentiment-pulse-tawny.vercel.app (free tier: the first request may take up to a minute while the API wakes up) |
 | **Reports** | [Evaluation report](reports/evaluation.md) · [EDA](reports/eda.md) · [Dataset bake-off](reports/dataset_bakeoff.md) |
 
 ---
@@ -67,13 +68,14 @@ This re-runs validation, cleaning, the split, EDA, cross-validated model selecti
 ### Run the parts locally without Docker (development)
 
 ```bash
-docker compose up -d db redis                                 # just the dependencies
+# PostgreSQL + Redis in Docker, published on localhost:5432 / :6379
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db redis
 pip install -r backend/requirements-dev.txt && pip install -e ml
 cd backend && alembic upgrade head && uvicorn app.main:app --reload   # API on :8000
-cd frontend && npm ci && npm run dev                          # UI on :3000 (proxies /api to :8000)
+cd frontend && npm ci && npm run dev                                  # UI on :3000 (proxies /api to :8000)
 ```
 
-When running outside Docker, set `DATABASE_URL` to the compose database (see `.env.example`).
+The API's built-in defaults (`backend/app/config.py`, documented in `backend/.env.example`) already point at `localhost` with the compose credentials, so no extra configuration is needed.
 
 ---
 
@@ -384,8 +386,8 @@ All configuration comes from environment variables. [`.env.example`](.env.exampl
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | compose database | SQLAlchemy URL (`postgres://` URLs from hosting providers are normalised) |
-| `REDIS_URL` | `redis://redis:6379/0` | cache |
+| `DATABASE_URL` | `…@localhost:5432/sentiment` (compose sets `…@db:5432/…`) | SQLAlchemy URL (`postgres://` URLs from hosting providers are normalised) |
+| `REDIS_URL` | `redis://localhost:6379/0` (compose sets `redis://redis:6379/0`) | cache |
 | `MODEL_DIR` | `artifacts/models/tfidf-logreg-1.0.0` | model artifact to load |
 | `CACHE_ENABLED` / `CACHE_TTL_SECONDS` | `true` / `86400` | cache switch and lifetime |
 | `MAX_TEXT_LENGTH` | `1000` | input limit (characters) |
@@ -393,7 +395,7 @@ All configuration comes from environment variables. [`.env.example`](.env.exampl
 | `LOW_CONFIDENCE_THRESHOLD` | `0.55` | below this the UI flags a prediction |
 | `LOG_LEVEL` | `INFO` | JSON logs to stdout |
 | `CORS_ORIGINS` | `http://localhost:3000` | only needed if a browser calls the API directly |
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `sentiment` / local-only / `sentiment` | compose database |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `sentiment` / `sentiment` (local only) / `sentiment` | compose database. The password is applied only when the volume is first created; after changing it, run `docker compose down -v` |
 | `API_INTERNAL_URL` (frontend, build time) | `http://api:8000` | where Next.js forwards `/api` |
 
 ---
@@ -420,9 +422,9 @@ API tests run against a real PostgreSQL (with the Alembic migration applied), fa
 
 **Local:** `docker compose up --build` (above).
 
-**Hosted demo:** the frontend runs on **Vercel**; the API, PostgreSQL and Key Value (Redis-compatible) run on **Render** ([render.yaml](render.yaml), Singapore region).
+**Hosted demo: https://sentiment-pulse-tawny.vercel.app.** The frontend runs on **Vercel**. The API, PostgreSQL and Key Value (Redis-compatible) run on **Render** ([render.yaml](render.yaml), Singapore region) at https://sentiment-pulse-api.onrender.com (API docs at `/docs`).
 1. **Render:** New → Blueprint → select this repository. This creates the API (built from `backend/Dockerfile`), a PostgreSQL database and a Key Value instance, and wires `DATABASE_URL` and `REDIS_URL`. Migrations run on start.
-2. **Vercel:** import the repository with **root directory `frontend`** and set `API_INTERNAL_URL` to the Render API URL (e.g. `https://sentiment-pulse-api.onrender.com`). Next.js forwards `/api` and `/health` to it, so no CORS setup is needed.
+2. **Vercel:** project root directory `frontend`, with `API_INTERNAL_URL=https://sentiment-pulse-api.onrender.com`. Next.js forwards `/api` and `/health` to it, so no CORS setup is needed. Deployed with `cd frontend && vercel deploy --prod`.
 
 Free-tier notes:
 - Render free web services sleep after about 15 minutes idle, so the first request can take up to a minute to wake the API.
@@ -465,7 +467,7 @@ Free-tier notes:
 
 **To millions of posts per day**, in roughly this order:
 1. **Decouple ingestion from inference.** Put posts on a queue (Kafka, SQS or Redis Streams). Stateless workers predict in micro-batches (`predict_many` is already vectorised) and write results with bulk inserts.
-2. **Scale horizontally.** The model is about 10 MB and CPU-only, so many API or worker replicas can run behind a load balancer. Each loads the artifact at startup.
+2. **Scale horizontally.** The model file is about 3 MB and CPU-only, so many API or worker replicas can run behind a load balancer. Each loads the artifact at startup. Database migrations, which today run in each container's entrypoint, would move to a single release step so that replicas don't race.
 3. **Database.** Partition `predictions` by month on `created_at`. Serve dashboard numbers from pre-aggregated rollup tables or materialised views, refreshed incrementally, instead of scanning raw rows. Use keyset pagination instead of `OFFSET`. Add read replicas for analytics.
 4. **Cache.** Use a managed Redis cluster, cache analytics responses for short TTLs, and keep the versioned keys.
 5. **Model registry** (e.g. MLflow) instead of committed artifacts, plus a canary or shadow rollout for new versions.
@@ -499,7 +501,7 @@ sentiment-pulse/
 ├── backend/                # FastAPI app (api/, schemas/, services/, db/, core/), Alembic, tests, Dockerfile
 ├── frontend/               # Next.js app, components, lib/api.ts, tests, Dockerfile
 ├── scripts/dataset_bakeoff.py
-├── docker-compose.yml
+├── docker-compose.yml      # + docker-compose.dev.yml (publishes db/redis ports for local dev)
 ├── render.yaml             # Render blueprint (API + PostgreSQL + Key Value)
 └── .github/workflows/ci.yml
 ```
