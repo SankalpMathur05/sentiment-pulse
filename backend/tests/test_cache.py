@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import fakeredis
+from redis import ConnectionError as RedisConnectionError
 from sentiment_ml.inference import SentimentModel
 from sqlalchemy import select
 
 from app.db.models import Prediction
+from app.services.cache import PredictionCache
 from tests.conftest import BrokenRedis
 from tests.helpers import assert_error
 
@@ -78,6 +80,22 @@ class TestGracefulDegradation:
         assert response.status_code == 200
         assert (response.json()["cache_status"], response.headers["X-Cache"]) == ("bypass", "BYPASS")
         assert db_session.scalars(select(Prediction.cache_status)).all() == ["bypass"]
+
+    def test_failure_pauses_redis_calls_then_retries(self):
+        calls = []
+
+        class CountingBrokenRedis(BrokenRedis):
+            def get(self, key):
+                calls.append(key)
+                raise RedisConnectionError("Redis is down")
+
+        paused = PredictionCache(CountingBrokenRedis(), ttl_seconds=60, retry_after_seconds=60)
+        assert [paused.lookup("k")[0], paused.lookup("k")[0]] == ["bypass", "bypass"]
+        assert len(calls) == 1  # the second lookup didn't wait on Redis at all
+
+        retrying = PredictionCache(CountingBrokenRedis(), ttl_seconds=60, retry_after_seconds=0)
+        retrying.lookup("k"), retrying.lookup("k")
+        assert len(calls) == 3  # with no pause, every lookup tries Redis again
 
     def test_disabled_cache_bypasses_redis(self, make_client, fake_redis):
         client = make_client(cache_enabled=False)
