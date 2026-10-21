@@ -58,6 +58,14 @@ def test_normalize_matches_what_the_model_sees(model_dir):
     assert model.normalize("  @united   GREAT flight!!! ") == model.normalize("@delta great flight!")
 
 
+def test_model_trained_with_other_preprocessing_version_is_rejected(model_dir, tmp_path):
+    (tmp_path / "model.joblib").write_bytes((model_dir / "model.joblib").read_bytes())
+    metadata = json.loads((model_dir / "metadata.json").read_text())
+    (tmp_path / "metadata.json").write_text(json.dumps({**metadata, "preprocessing_version": "0.9"}))
+    with pytest.raises(ValueError, match="preprocessing version"):
+        SentimentModel.load(tmp_path)
+
+
 def test_tampered_model_file_is_rejected(model_dir, tmp_path):
     for name in ("model.joblib", "metadata.json"):
         (tmp_path / name).write_bytes((model_dir / name).read_bytes())

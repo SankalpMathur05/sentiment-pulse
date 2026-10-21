@@ -87,7 +87,7 @@ Rows of the confusion matrix are the true labels and columns the predictions; th
 | 0.80–0.90 | 571 | 20.1% | 0.85 | 92.6% |
 | 0.90–1.00 | 699 | 24.6% | 0.95 | 97.6% |
 
-Log loss 0.499, multi-class Brier score 0.279 (lower is better). Higher confidence does mean higher accuracy, but the values are estimates, which is why the UI labels them as such and flags predictions below 0.55 as low confidence (676 test posts).
+Log loss 0.499, multi-class Brier score 0.279 (lower is better). Higher confidence does mean higher accuracy, but the values are estimates, which is why the UI labels them as such and flags predictions below 0.55 as low confidence: 496 test posts (17.4%) fall below it and are right 51.8% of the time, versus 87.1% for the rest.
 
 ## 8. Label noise
 

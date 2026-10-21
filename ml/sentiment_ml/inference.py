@@ -13,6 +13,7 @@ import numpy as np
 
 from .artifacts import sha256_file
 from .explain import word_contributions
+from .preprocessing import PREPROCESSING_VERSION
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,13 @@ class SentimentModel:
         model_path = model_dir / "model.joblib"
         if sha256_file(model_path) != metadata["artifact_sha256"]:
             raise ValueError(f"{model_path} does not match the checksum in metadata.json")
+        # The pickle stores the cleaner's settings, not its code. If the installed cleaning code
+        # differs from the one used in training, the model would silently see different text.
+        if metadata.get("preprocessing_version") != PREPROCESSING_VERSION:
+            raise ValueError(
+                f"Model was trained with preprocessing version {metadata.get('preprocessing_version')!r} but the "
+                f"installed code is {PREPROCESSING_VERSION!r}. Retrain with `python -m sentiment_ml.pipeline`."
+            )
         return cls(joblib.load(model_path), metadata)
 
     def normalize(self, text: str) -> str:

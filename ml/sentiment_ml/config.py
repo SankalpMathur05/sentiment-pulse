@@ -15,6 +15,9 @@ CV_FOLDS = 5
 # Fixed label order used for metrics, probabilities and the confusion matrix.
 LABELS: tuple[str, ...] = ("negative", "neutral", "positive")
 
+# Predictions below this confidence are flagged as "low confidence" (same default as the API).
+LOW_CONFIDENCE_THRESHOLD = 0.55
+
 MODEL_NAME = "tfidf-logreg"
 MODEL_SEMVER = "1.0.0"
 

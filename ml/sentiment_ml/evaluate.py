@@ -76,6 +76,14 @@ def calibration_table(y_true, y_pred, confidence: np.ndarray, bins=(0.33, 0.5, 0
     return rows
 
 
+def low_confidence_summary(y_true, y_pred, confidence: np.ndarray, threshold: float) -> dict:
+    """How many predictions the UI would flag as low confidence, and how accurate each side is."""
+    correct = np.asarray(y_true) == np.asarray(y_pred)
+    low = confidence < threshold
+    return {"threshold": threshold, "count": int(low.sum()), "share": float(low.mean()),
+            "accuracy_below": float(correct[low].mean()), "accuracy_above": float(correct[~low].mean())}
+
+
 def plot_calibration(rows: list[dict], name: str) -> str:
     fig, ax = plt.subplots(figsize=(4.6, 3.8))
     ax.plot([0.3, 1], [0.3, 1], linestyle="--", color="#94a3b8", label="perfectly calibrated")

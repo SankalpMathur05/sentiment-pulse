@@ -16,6 +16,8 @@ from pathlib import Path
 
 import joblib
 
+from .preprocessing import PREPROCESSING_VERSION
+
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -37,6 +39,7 @@ def save_model(pipeline, metadata: dict, out_dir: Path) -> dict:
     joblib.dump(pipeline, model_path, compress=3)
     sha = sha256_file(model_path)
     metadata = {
+        "preprocessing_version": PREPROCESSING_VERSION,
         **metadata,
         "artifact_sha256": sha,
         "version": build_version(metadata["name"], metadata["semver"], sha),

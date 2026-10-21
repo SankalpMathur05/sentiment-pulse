@@ -19,8 +19,9 @@ from dataclasses import asdict, dataclass, fields
 import emoji
 from sklearn.base import BaseEstimator, TransformerMixin
 
-# Bump this whenever cleaning behaviour changes: it is stored in the model metadata
-# and becomes part of the cache key, so old cached predictions are never reused.
+# Bump this whenever cleaning behaviour changes. It is stored in the model metadata, and
+# SentimentModel.load refuses a model trained with a different version. A cleaning change
+# therefore forces a retrain, which changes the model version and so every cache key.
 PREPROCESSING_VERSION = "1.0"
 
 URL_TOKEN = "<url>"

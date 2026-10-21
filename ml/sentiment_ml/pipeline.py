@@ -93,6 +93,7 @@ def main() -> None:
 
     confidence = proba.max(axis=1)
     calibration = evaluate.calibration_table(test["label"], y_pred, confidence)
+    low_confidence = evaluate.low_confidence_summary(test["label"], y_pred, confidence, config.LOW_CONFIDENCE_THRESHOLD)
     agreement = evaluate.accuracy_by_label_agreement(test, y_pred)
     domain_shift = _domain_shift(final)
 
@@ -131,7 +132,8 @@ def main() -> None:
     out_dir = config.ARTIFACTS_DIR / f"{config.MODEL_NAME}-{config.MODEL_SEMVER}"
     metadata = save_model(final, metadata, out_dir)
 
-    _write_evaluation_report(metadata, comparison, ablation, calibration, agreement, domain_shift, errors, test)
+    _write_evaluation_report(metadata, comparison, ablation, calibration, low_confidence, agreement, domain_shift,
+                             errors, test)
     print(f"\nDone in {time.perf_counter() - started:.0f}s. Model version: {metadata['version']}")
     print(f"Test macro-F1 = {metrics['macro_f1']:.4f} | accuracy = {metrics['accuracy']:.4f}")
 
@@ -160,7 +162,8 @@ def _rounded(value):
     return value
 
 
-def _write_evaluation_report(metadata, comparison, ablation, calibration, agreement, domain_shift, errors, test):
+def _write_evaluation_report(metadata, comparison, ablation, calibration, low_confidence, agreement, domain_shift,
+                             errors, test):
     m = metadata["metrics"]
     results = comparison["results"]
     dummy = results["dummy"]
@@ -240,15 +243,16 @@ def _write_evaluation_report(metadata, comparison, ablation, calibration, agreem
     lines += ["", "Rows of the confusion matrix are the true labels and columns the predictions; the percentage "
               "is the share of that true class."]
 
-    low = [r for r in calibration if r["mean_confidence"] < 0.55]
     lines += ["", "## 7. Confidence: can we trust the score?", "", f"![Calibration]({cal_fig})", ""]
     lines += md_table(["Confidence band", "Predictions", "Share", "Avg confidence", "Actual accuracy"],
                       [[r["band"], r["count"], pct(r["share"]), f"{r['mean_confidence']:.2f}", pct(r["accuracy"])]
                        for r in calibration])
+    lc = low_confidence
     lines += ["", f"Log loss {m['log_loss']:.3f}, multi-class Brier score {m['brier_score']:.3f} (lower is better). "
               "Higher confidence does mean higher accuracy, but the values are estimates, which is why the UI labels "
-              "them as such and flags predictions below 0.55 as low confidence"
-              + (f" ({sum(r['count'] for r in low):,} test posts)." if low else ".")]
+              f"them as such and flags predictions below {lc['threshold']} as low confidence: {lc['count']:,} test posts "
+              f"({lc['share']:.1%}) fall below it and are right {lc['accuracy_below']:.1%} of the time, versus "
+              f"{lc['accuracy_above']:.1%} for the rest."]
 
     lines += ["", "## 8. Label noise", "",
               "Accuracy of the served model grouped by how much the human annotators agreed:", ""]
