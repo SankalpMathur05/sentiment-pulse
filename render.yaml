@@ -1,0 +1,41 @@
+# Render Blueprint for the backend: API (Docker) + PostgreSQL + Key Value (Redis-compatible).
+# Deploy: Render dashboard -> New -> Blueprint -> select this repository.
+# All three live in the same region so they talk over Render's private network.
+services:
+  - type: web
+    name: sentiment-pulse-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/live
+    envVars:
+      - key: DATABASE_URL # Render provides postgres://...; the API normalises it to psycopg
+        fromDatabase:
+          name: sentiment-pulse-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: sentiment-pulse-cache
+          property: connectionString
+      - key: ENVIRONMENT
+        value: render
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: keyvalue
+    name: sentiment-pulse-cache
+    plan: free
+    region: singapore
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # private network only: no access from the internet
+
+databases:
+  - name: sentiment-pulse-db
+    plan: free
+    region: singapore
+    databaseName: sentiment
+    user: sentiment
+    postgresMajorVersion: "16"
