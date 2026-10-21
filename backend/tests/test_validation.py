@@ -24,6 +24,9 @@ class TestPredictValidation:
             pytest.param(
                 {"text": "... --- ,,,"}, "text", "Text has no analysable content.", id="no-analysable-content"
             ),
+            pytest.param(
+                {"text": "!!! ???"}, "text", "Text has no analysable content.", id="punctuation-only"
+            ),
         ],
     )
     def test_rejects_invalid_body(self, client, payload, field, message):

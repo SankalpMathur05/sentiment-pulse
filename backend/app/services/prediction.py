@@ -19,6 +19,9 @@ from app.services.cache import PredictionCache, cache_key
 
 logger = logging.getLogger(__name__)
 
+# Tokens the cleaner keeps as sentiment signal, but which carry no meaning on their own.
+PUNCTUATION_TOKENS = frozenset({"!", "?"})
+
 
 @dataclass(frozen=True)
 class PreparedText:
@@ -39,8 +42,9 @@ def prepare_text(raw_text: str, model: SentimentModel, max_length: int) -> Prepa
             f"Text must be at most {max_length} characters (received {len(text)}).", field="text"
         )
     normalized = model.normalize(text)
-    if not normalized:
-        # e.g. "... ---": nothing the model could read, so any answer would be meaningless.
+    # "... ---" cleans to nothing and "!!!" to just "!": with no word, emoji or emoticon the
+    # model would answer from punctuation alone, so any label would be meaningless.
+    if not any(token not in PUNCTUATION_TOKENS for token in normalized.split()):
         raise InputValidationError("Text has no analysable content.", field="text")
     return PreparedText(text=text, text_sha256=hashlib.sha256(normalized.encode("utf-8")).hexdigest())
 
