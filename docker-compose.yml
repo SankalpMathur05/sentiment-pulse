@@ -1,0 +1,76 @@
+# One command starts everything:  docker compose up --build
+# Frontend: http://localhost:3000   API docs: http://localhost:8000/docs
+#
+# Every setting has a safe LOCAL default, so a fresh clone runs without a .env file.
+# Copy .env.example to .env to override them (never commit .env).
+name: sentiment-pulse
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sentiment}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sentiment-local-only}
+      POSTGRES_DB: ${POSTGRES_DB:-sentiment}
+    volumes:
+      - pgdata:/var/lib/postgresql/data # data survives container restarts and rebuilds
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    # A pure cache: bounded memory, evict least-recently-used keys, no disk persistence.
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: . # repo root, so the image can include ml/ and artifacts/
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-sentiment}:${POSTGRES_PASSWORD:-sentiment-local-only}@db:5432/${POSTGRES_DB:-sentiment}
+      REDIS_URL: redis://redis:6379/0
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-86400}
+      MAX_TEXT_LENGTH: ${MAX_TEXT_LENGTH:-1000}
+      LOW_CONFIDENCE_THRESHOLD: ${LOW_CONFIDENCE_THRESHOLD:-0.55}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      ENVIRONMENT: docker
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_INTERNAL_URL: http://api:8000 # the browser calls the frontend; Next.js forwards /api to this address
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
