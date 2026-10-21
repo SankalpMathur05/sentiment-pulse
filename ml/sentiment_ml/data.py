@@ -9,7 +9,6 @@ Order of operations matters for honesty:
 """
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,6 +17,7 @@ import requests
 from sklearn.model_selection import train_test_split
 
 from . import config
+from .artifacts import sha256_file
 from .preprocessing import clean_text
 
 
@@ -57,13 +57,24 @@ TWEETEVAL_LABELS = {0: "negative", 1: "neutral", 2: "positive"}
 
 AIRLINE_REQUIRED_COLUMNS = ["tweet_id", "airline_sentiment", "airline_sentiment_confidence", "airline", "text"]
 
+# The published airline CSV contains find-and-replace damage: the dataset creators replaced
+# every "late" and "cancel" (and some "book") substrings with complaint-category names,
+# e.g. "chocolate" -> "chocoLate Flight", "rebook" -> "reFlight Booking Problems".
+# The natural words "late" and "cancel" appear ZERO times, so without this repair the model
+# could never learn the most common airline complaints. Real posts never contain these
+# strings, so the repair lives here (dataset-specific), not in clean_text (which also runs
+# on live API input).
+AIRLINE_TEXT_ARTIFACTS = (
+    ("Cancelled Flight", "cancel"),
+    ("Late Flight", "late"),
+    ("Flight Booking Problems", "book"),
+)
 
-def sha256_of(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+
+def repair_airline_artifacts(text: str) -> str:
+    for artifact, original in AIRLINE_TEXT_ARTIFACTS:
+        text = text.replace(artifact, original)
+    return text
 
 
 def ensure_downloaded(source: DatasetSource) -> Path:
@@ -73,7 +84,7 @@ def ensure_downloaded(source: DatasetSource) -> Path:
         response = requests.get(source.url, timeout=120)
         response.raise_for_status()
         source.path.write_bytes(response.content)
-    if source.sha256 and sha256_of(source.path) != source.sha256:
+    if source.sha256 and sha256_file(source.path) != source.sha256:
         raise ValueError(f"Checksum mismatch for {source.path}. Delete it and re-run to download again.")
     return source.path
 
@@ -146,7 +157,10 @@ def prepare(df: pd.DataFrame, text_col: str, label_col: str) -> tuple[pd.DataFra
 
 def prepare_airline() -> tuple[pd.DataFrame, dict]:
     raw = load_airline_raw()
-    df, report = prepare(raw, text_col="text", label_col="airline_sentiment")
+    repaired = raw["text"].astype(str).map(repair_airline_artifacts)
+    artifacts_repaired = int((repaired != raw["text"].astype(str)).sum())
+    df, report = prepare(raw.assign(text=repaired), text_col="text", label_col="airline_sentiment")
+    report = {"rows_raw": report.pop("rows_raw"), "text_artifacts_repaired": artifacts_repaired, **report}
     df = df.rename(columns={"airline_sentiment_confidence": "label_confidence"})
     keep = ["tweet_id", "text", "clean_text", "label", "label_confidence", "airline", "negativereason", "tweet_created"]
     return df[keep], report

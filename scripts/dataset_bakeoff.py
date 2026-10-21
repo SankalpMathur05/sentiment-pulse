@@ -16,7 +16,8 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 
 from sentiment_ml import config
-from sentiment_ml.data import AIRLINE, TWEETEVAL_SPLITS, load_tweeteval, prepare, prepare_airline, sha256_of
+from sentiment_ml.artifacts import sha256_file
+from sentiment_ml.data import AIRLINE, TWEETEVAL_SPLITS, load_tweeteval, prepare, prepare_airline
 from sentiment_ml.preprocessing import tokenize
 
 
@@ -98,9 +99,9 @@ def main() -> None:
     lines += [f"| {k} | {airline_report.get(k, '–')} | {tweeteval_report.get(k, '–')} |" for k in airline_report]
     out = config.REPORTS_DIR / "dataset_bakeoff.md"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     print("\n".join(lines))
-    print(f"\nAirline CSV sha256: {sha256_of(AIRLINE.path)}")
+    print(f"\nAirline CSV sha256: {sha256_file(AIRLINE.path)}")
 
 
 if __name__ == "__main__":
