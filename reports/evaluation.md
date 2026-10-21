@@ -173,7 +173,7 @@ The examples above (plus the wider list of test errors) were read by hand and gr
 - *"thanks for having ground crews that are surprised when flights arrive. #beingsuckontarmacsucks!"*
 - Outside the test set, the demo example *"Oh great, another 3 hour delay. Thanks @united 🙄"* is also predicted positive.
 
-**2. Label noise: the model is arguably right (any direction).** 53% of all errors are on tweets whose annotators disagreed (agreement < 0.7), and accuracy is 89% on full-agreement tweets versus about 61% on low-agreement ones (section 8).
+**2. Label noise: the model is arguably right (any direction).** 53% of all errors are on tweets whose annotators disagreed (agreement < 0.7), and accuracy is about 89% on full-agreement tweets versus about 63% on low-agreement ones (section 8).
 - *"oh, ok! all good! looking forward to escaping the cold for a bit! thanks!"*: labelled negative (agreement 0.35), reads positive.
 - *"@JetBlue Airways Reveals 'Bluemanity' Livery - TravelPulse <link>"*: a news headline labelled positive (0.65); neutral is defensible.
 - *"Flight 4968 (N8325D) departs @MCO enroute to @NO_Airport <link>"*: a flight notice labelled negative (0.66).
