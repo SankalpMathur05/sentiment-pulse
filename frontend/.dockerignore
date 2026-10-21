@@ -1,0 +1,29 @@
+# Dependencies and build output are recreated inside the image
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests and tooling that the production image doesn't need
+__tests__
+vitest.config.mts
+vitest.setup.ts
+
+# Local environment files (the image gets API_INTERNAL_URL as a build arg)
+.env
+.env.*
+!.env.example
+
+# Docker, VCS and editor files
+Dockerfile
+.dockerignore
+.git
+.gitignore
+.vscode
+.idea
+*.log
+README.md
+AGENTS.md
