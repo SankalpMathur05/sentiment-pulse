@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentiment-ml"
+version = "1.0.0"
+description = "Data preparation, training and evaluation for the Sentiment Pulse classifier"
+requires-python = ">=3.11"
+# Runtime dependencies: everything the API needs to load the model and predict.
+dependencies = [
+    "emoji>=2.10",
+    "joblib>=1.4",
+    "numpy>=2.0",
+    "scikit-learn>=1.6",
+    "scipy>=1.13",
+]
+
+[project.optional-dependencies]
+# Extra dependencies only needed to train, run EDA and write reports.
+train = [
+    "matplotlib>=3.8",
+    "pandas>=2.2",
+    "pyarrow>=15",
+    "requests>=2.31",
+]
+
+[tool.setuptools.packages.find]
+include = ["sentiment_ml*"]
