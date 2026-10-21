@@ -1,0 +1,21 @@
+# BuildKit reads <Dockerfile>.dockerignore when building with -f backend/Dockerfile from
+# the repository root. Keep the build context small and free of secrets.
+.git
+**/.venv
+**/venv
+**/node_modules
+frontend
+data
+reports
+scripts
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/*.egg-info
+**/build
+**/dist
+**/.env
+**/.env.*
+backend/tests
