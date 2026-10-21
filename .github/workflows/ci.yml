@@ -61,7 +61,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npx tsc --noEmit
+      - run: npm run typecheck # generates Next.js route types (e.g. LayoutProps) first
       - run: npm test
       - run: npm run build
 
