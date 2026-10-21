@@ -6,10 +6,10 @@
 |---|---|
 | **Headline result** | Macro-F1 **0.754**, accuracy **0.809** on a held-out test set of 2,847 tweets (majority-class baseline: macro-F1 0.259) |
 | **Model** | `tfidf-logreg@1.0.0+9cb76b11`, trained on the Twitter US Airline Sentiment dataset, deterministic (seed 42) |
-| **Stack** | Python Â· scikit-learn Â· FastAPI Â· PostgreSQL 16 Â· Redis 7 Â· Next.js Â· Docker Compose |
+| **Stack** | Python · scikit-learn · FastAPI · PostgreSQL 16 · Redis 7 · Next.js · Docker Compose |
 | **Run it** | `docker compose up --build`, then open http://localhost:3000 |
 | **Live demo** | https://sentiment-pulse-tawny.vercel.app (free tier: the first request may take up to a minute while the API wakes up) |
-| **Reports** | [Evaluation report](reports/evaluation.md) Â· [EDA](reports/eda.md) Â· [Dataset bake-off](reports/dataset_bakeoff.md) |
+| **Reports** | [Evaluation report](reports/evaluation.md) · [EDA](reports/eda.md) · [Dataset bake-off](reports/dataset_bakeoff.md) |
 
 ---
 
@@ -83,31 +83,31 @@ The API's built-in defaults (`backend/app/config.py`, documented in `backend/.en
 
 | Requirement | Where |
 |---|---|
-| FR-01 Single-post prediction | `POST /api/predict` Â· **Analyze** page |
+| FR-01 Single-post prediction | `POST /api/predict` · **Analyze** page |
 | FR-02 Confidence, labelled as an estimate | probabilities for all three classes; "Estimated confidence" in the UI; low-confidence flag below 0.55 |
 | FR-03 Prediction history in PostgreSQL | `predictions` table: text, label, scores, model version, cache status, timestamp |
-| FR-04 Analytics dashboard | `GET /api/analytics/summary` Â· **Dashboard** page (totals, distribution, trend, recent table) |
-| FR-05 Filters by sentiment and date range | `GET /api/predictions` + `GET /api/analytics/summary` Â· filter bar on Dashboard and History |
+| FR-04 Analytics dashboard | `GET /api/analytics/summary` · **Dashboard** page (totals, distribution, trend, recent table) |
+| FR-05 Filters by sentiment and date range | `GET /api/predictions` + `GET /api/analytics/summary` · filter bar on Dashboard and History |
 | FR-06 API validation with consistent errors | one JSON error envelope for every failure (see [API](#7-api)) |
 | FR-07 Redis caching | key = model version + hash of the normalised text, 24h TTL |
 | FR-08 Cache observability | `cache_status` + `X-Cache` header in every response, structured log line, stored per row, dashboard panel |
 | FR-09 Health checks | `GET /health` (API, PostgreSQL, Redis, model) and `GET /health/live` |
-| Good to have | model comparison (5 models) Â· CSV batch prediction Â· CI on GitHub Actions Â· per-word explanations Â· cache statistics on the dashboard |
+| Good to have | model comparison (5 models) · CSV batch prediction · CI on GitHub Actions · per-word explanations · cache statistics on the dashboard |
 
 ---
 
 ## 3. Architecture
 
 ```
- Browser â”€â”€â–º Next.js (frontend, :3000) â”€â”€/api, /healthâ”€â”€â–º FastAPI (api, :8000) â”€â”€â–º PostgreSQL (predictions)
-                 rewrites() proxy                           â”‚   â–²
-                                                            â”‚   â””â”€â”€ model loaded once at startup
-                                                            â–¼       from artifacts/models/â€¦
+ Browser ──► Next.js (frontend, :3000) ──/api, /health──► FastAPI (api, :8000) ──► PostgreSQL (predictions)
+                 rewrites() proxy                           │   ▲
+                                                            │   └── model loaded once at startup
+                                                            ▼       from artifacts/models/…
                                                           Redis (prediction cache)
 ```
 
 **Life of one request (`POST /api/predict`):**
-1. Validate: must be a string, stripped, non-empty, â‰¤ 1000 characters, no extra fields.
+1. Validate: must be a string, stripped, non-empty, ≤ 1000 characters, no extra fields.
 2. Normalise the text with the **same `clean_text` used in training**. Reject it if nothing analysable remains.
 3. Build the cache key `sentiment:v1:{model_version}:{sha256(normalised text)}` and `GET` it from Redis.
 4. **Hit:** reuse the cached result. **Miss:** run the model, then `SET` the result with a TTL (only after success). **Redis down:** run the model with status `bypass`.
@@ -125,10 +125,10 @@ The browser only talks to the Next.js server. Next.js `rewrites()` forwards `/ap
 | **Name** | Twitter US Airline Sentiment (CrowdFlower / Figure Eight, *Data for Everyone*) |
 | **Source** | https://www.kaggle.com/datasets/crowdflower/twitter-airline-sentiment (credential-free mirror used for download: https://huggingface.co/datasets/osanseviero/twitter-airline-sentiment) |
 | **Licence** | CC BY-NC-SA 4.0 (attribution, non-commercial, share-alike). Redistributed unchanged in `data/raw/` with attribution ([data/raw/README.md](data/raw/README.md)) |
-| **Size** | 14,640 tweets about 6 US airlines, posted 16â€“24 February 2015 |
+| **Size** | 14,640 tweets about 6 US airlines, posted 16–24 February 2015 |
 | **Schema** | 15 columns. Used: `text` (input), `airline_sentiment` (label: negative / neutral / positive), `airline_sentiment_confidence` (annotator agreement, for error analysis). Also present: `tweet_id`, `airline`, `negativereason`, `negativereason_confidence`, `tweet_created`, `name`, `retweet_count`, `tweet_location`, `user_timezone`, and mostly-empty `*_gold` and `tweet_coord` columns |
 | **Labels** | Already Negative / Neutral / Positive, so no mapping is needed (only lower-cased). Distribution after cleaning: 64% / 21% / 16% |
-| **Integrity** | SHA-256 pinned in code (`ea94b23fâ€¦f15e`) and verified on every load |
+| **Integrity** | SHA-256 pinned in code (`ea94b23f…f15e`) and verified on every load |
 
 **Why this dataset:**
 - It is about customers talking *to brands*, which is LocoBuzz's domain.
@@ -148,7 +148,7 @@ It was chosen over TweetEval-sentiment (60k general tweets, CC BY 3.0) after a s
 
 **Timestamps:** the dataset has `tweet_created`, but the dashboard never uses it. All dashboard dates and filters use the time each **prediction** was made, as the brief requires. Nothing is fabricated.
 
-**Data artifact found during EDA:** the published CSV replaced every `late` and `cancel` (and some `book`) substring with complaint-category names, e.g. `chocolate` â†’ `chocoLate Flight`, `cancelled` â†’ `Cancelled Flightled`. The natural words *late* and *cancel* appear **zero times**. `data.py` reverses this before cleaning (1,616 tweets affected). Without the repair the model could not learn the most common airline complaints. See [EDA Â§2](reports/eda.md).
+**Data artifact found during EDA:** the published CSV replaced every `late` and `cancel` (and some `book`) substring with complaint-category names, e.g. `chocolate` → `chocoLate Flight`, `cancelled` → `Cancelled Flightled`. The natural words *late* and *cancel* appear **zero times**. `data.py` reverses this before cleaning (1,616 tweets affected). Without the repair the model could not learn the most common airline complaints. See [EDA §2](reports/eda.md).
 
 ---
 
@@ -159,27 +159,27 @@ It was chosen over TweetEval-sentiment (60k general tweets, CC BY 3.0) after a s
 1. **Inspect and validate** (`data.py`): checksum, required columns, missing values, empty texts, invalid labels.
 2. **Repair** the dataset's find-and-replace artifacts.
 3. **Clean** each tweet with `clean_text` (`preprocessing.py`). This is the same function the API uses, so there is no training/serving skew.
-4. **De-duplicate** on the *cleaned* text. Duplicate tweet IDs (155) and conflicting-label copies (153, where annotators labelled identical text differently) are dropped. Remaining duplicates (100) keep one copy. This happens **before** splitting, so an identical input cannot sit in both train and test. Result: 14,640 â†’ 14,232 rows.
+4. **De-duplicate** on the *cleaned* text. Duplicate tweet IDs (155) and conflicting-label copies (153, where annotators labelled identical text differently) are dropped. Remaining duplicates (100) keep one copy. This happens **before** splitting, so an identical input cannot sit in both train and test. Result: 14,640 → 14,232 rows.
 5. **Stratified split** 80/20 (`random_state=42`): **11,385 train / 2,847 test**, with identical class proportions. No vectoriser is fitted before this point; TF-IDF lives inside the model pipeline and is re-fitted on every cross-validation fold.
 6. **EDA** report with figures: label distribution, text length per class, top tokens per class, sentiment by airline, label quality and cleaning examples ([reports/eda.md](reports/eda.md)).
 
 ### Cleaning steps and the signal they could destroy
 
-Each step's effect was **measured** with a cleaning ablation: switch one step off, re-run 5-fold CV ([evaluation Â§5](reports/evaluation.md#5-cleaning-ablation-which-cleaning-steps-help-or-hurt)).
+Each step's effect was **measured** with a cleaning ablation: switch one step off, re-run 5-fold CV ([evaluation §5](reports/evaluation.md#5-cleaning-ablation-which-cleaning-steps-help-or-hurt)).
 
-| Step | Risk to sentiment signal | How it's handled | CV Î” if removed |
+| Step | Risk to sentiment signal | How it's handled | CV Δ if removed |
 |---|---|---|---|
-| HTML entities, Unicode NFKC | none | `&amp;` â†’ `&`, fancy fonts â†’ plain letters | â€“ |
-| URLs â†’ `<url>` | none, but random URL tokens add noise | placeholder keeps "has a link" | âˆ’0.002 |
-| @mentions â†’ `<user>` | low; the handle identifies the brand, not the feeling | prevents a brand shortcut ("@united = negative") that would not transfer to other brands | âˆ’0.003 |
-| Hashtags | **high** if deleted (`#fail`, `#NeverAgain`) | keep the words, drop `#`, split CamelCase | âˆ’0.003 |
-| Text emoticons `:) :( <3` | **high**; they are punctuation and would be stripped | converted to tokens (`<smile>`, `<sad>`, `<heart>`) before punctuation removal | âˆ’0.003 |
-| Emojis | **high** if deleted | converted to names (`:face_with_tears_of_joy:`) | âˆ’0.002 |
-| `!` and `?` | **high**: intensity and questions (neutral) | kept as tokens; repeated `!!!` â†’ `!` | **âˆ’0.010** |
-| Lowercasing | ALL-CAPS shouting is lost | accepted trade-off | â€“ |
-| Elongation `soooo` â†’ `soo` | low | keeps two letters so emphasis is still distinguishable | 0.000 |
-| Stop words | **high**: standard lists delete *not, no, never* | **not removed** | â€“ |
-| Negation marking (`not neg_good`) | â€“ | tested and **not adopted**: CV âˆ’0.002; bigrams like "not good" already capture negation | â€“ |
+| HTML entities, Unicode NFKC | none | `&amp;` → `&`, fancy fonts → plain letters | – |
+| URLs → `<url>` | none, but random URL tokens add noise | placeholder keeps "has a link" | −0.002 |
+| @mentions → `<user>` | low; the handle identifies the brand, not the feeling | prevents a brand shortcut ("@united = negative") that would not transfer to other brands | −0.003 |
+| Hashtags | **high** if deleted (`#fail`, `#NeverAgain`) | keep the words, drop `#`, split CamelCase | −0.003 |
+| Text emoticons `:) :( <3` | **high**; they are punctuation and would be stripped | converted to tokens (`<smile>`, `<sad>`, `<heart>`) before punctuation removal | −0.003 |
+| Emojis | **high** if deleted | converted to names (`:face_with_tears_of_joy:`) | −0.002 |
+| `!` and `?` | **high**: intensity and questions (neutral) | kept as tokens; repeated `!!!` → `!` | **−0.010** |
+| Lowercasing | ALL-CAPS shouting is lost | accepted trade-off | – |
+| Elongation `soooo` → `soo` | low | keeps two letters so emphasis is still distinguishable | 0.000 |
+| Stop words | **high**: standard lists delete *not, no, never* | **not removed** | – |
+| Negation marking (`not neg_good`) | – | tested and **not adopted**: CV −0.002; bigrams like "not good" already capture negation | – |
 
 All steps together vs. minimal cleaning (lowercase + split): **+0.017** CV macro-F1.
 
@@ -193,13 +193,13 @@ Full details: **[reports/evaluation.md](reports/evaluation.md)**.
 
 | Model | CV macro-F1 | Test macro-F1 | Test accuracy |
 |---|---|---|---|
-| Dummy (always "negative") | 0.259 Â± 0.000 | 0.259 | 0.637 |
-| TF-IDF + Complement Naive Bayes | 0.735 Â± 0.009 | 0.722 | 0.795 |
-| TF-IDF + Linear SVM | 0.755 Â± 0.008 | 0.761 | 0.820 |
-| **TF-IDF + Logistic Regression (served)** | **0.758 Â± 0.009** | **0.754** | **0.809** |
-| TF-IDF words + char n-grams + Logistic Regression | 0.761 Â± 0.008 | 0.763 | 0.810 |
+| Dummy (always "negative") | 0.259 ± 0.000 | 0.259 | 0.637 |
+| TF-IDF + Complement Naive Bayes | 0.735 ± 0.009 | 0.722 | 0.795 |
+| TF-IDF + Linear SVM | 0.755 ± 0.008 | 0.761 | 0.820 |
+| **TF-IDF + Logistic Regression (served)** | **0.758 ± 0.009** | **0.754** | **0.809** |
+| TF-IDF words + char n-grams + Logistic Regression | 0.761 ± 0.008 | 0.763 | 0.810 |
 
-**Why Logistic Regression is served:** a rule fixed before looking at test results says to serve LogReg unless another model beats it by more than 0.01 CV macro-F1. The char-n-gram variant was only 0.003 ahead, within one standard deviation. LogReg gives real probabilities (FR-02) and exact per-word explanations; Linear SVM has no native probabilities. Served settings: word 1â€“2-grams, `min_df=1`, `sublinear_tf`, `C=2`, `class_weight="balanced"`.
+**Why Logistic Regression is served:** a rule fixed before looking at test results says to serve LogReg unless another model beats it by more than 0.01 CV macro-F1. The char-n-gram variant was only 0.003 ahead, within one standard deviation. LogReg gives real probabilities (FR-02) and exact per-word explanations; Linear SVM has no native probabilities. Served settings: word 1–2-grams, `min_df=1`, `sublinear_tf`, `C=2`, `class_weight="balanced"`.
 
 **Why macro-F1 is the headline:** 64% of tweets are negative. The dummy model scores 0.637 accuracy while being useless (macro-F1 0.259). Macro-F1 weights negative, neutral and positive equally.
 
@@ -219,9 +219,9 @@ The confusion matrix, calibration plot, label-noise breakdown and domain-shift c
 - **Label noise caps measurable accuracy.** 89% accuracy where annotators fully agreed, about 63% where they did not.
 - **Domain shift.** On general tweets (TweetEval) macro-F1 falls to about 0.48.
 
-**Error analysis:** 543 of 2,847 test tweets are misclassified. The 24 most confident mistakes were reviewed by hand and grouped into six patterns: sarcasm and ironic thanks, label noise, mixed or "story arc" tweets, neutral requests that mention problems (the most common error), replies missing their thread context, and slang or quoted text ([evaluation Â§10](reports/evaluation.md#10-error-analysis)).
+**Error analysis:** 543 of 2,847 test tweets are misclassified. The 24 most confident mistakes were reviewed by hand and grouped into six patterns: sarcasm and ironic thanks, label noise, mixed or "story arc" tweets, neutral requests that mention problems (the most common error), replies missing their thread context, and slang or quoted text ([evaluation §10](reports/evaluation.md#10-error-analysis)).
 
-**Artifacts:** `artifacts/models/tfidf-logreg-1.0.0/` holds `model.joblib` (the whole pipeline: cleaner â†’ TF-IDF â†’ classifier) and `metadata.json` (version, SHA-256, library versions, hyper-parameters, dataset info, metrics, comparison, top words per class, limitations). The API loads it at startup. It refuses a file whose checksum doesn't match, and a model trained with a different preprocessing version.
+**Artifacts:** `artifacts/models/tfidf-logreg-1.0.0/` holds `model.joblib` (the whole pipeline: cleaner → TF-IDF → classifier) and `metadata.json` (version, SHA-256, library versions, hyper-parameters, dataset info, metrics, comparison, top words per class, limitations). The API loads it at startup. It refuses a file whose checksum doesn't match, and a model trained with a different preprocessing version.
 
 ---
 
@@ -232,7 +232,7 @@ Interactive docs: http://localhost:8000/docs. All endpoints return JSON.
 | Method | Endpoint | Purpose |
 |---|---|---|
 | POST | `/api/predict` | Classify one post |
-| POST | `/api/predict/batch` | Classify a CSV file (column `text`, â‰¤ 500 rows, â‰¤ 1 MB) |
+| POST | `/api/predict/batch` | Classify a CSV file (column `text`, ≤ 500 rows, ≤ 1 MB) |
 | GET | `/api/predictions` | Paginated history; filters `sentiment`, `date_from`, `date_to`, `page`, `page_size` |
 | GET | `/api/predictions/{id}` | One stored prediction |
 | GET | `/api/analytics/summary` | Totals, distribution, time series, cache counts (same filters) |
@@ -273,7 +273,7 @@ curl -s -X POST http://localhost:8000/api/predict \
 }
 ```
 
-Send the same request again and `cache_status` becomes `"hit"`. The response header `X-Cache: HIT` and the API log line show the same (latency 11.49 ms â†’ 0.75 ms):
+Send the same request again and `cache_status` becomes `"hit"`. The response header `X-Cache: HIT` and the API log line show the same (latency 11.49 ms → 0.75 ms):
 
 ```json
 {"timestamp": "2026-10-21T12:54:08.715903+00:00", "level": "INFO", "logger": "app.services.prediction", "message": "Prediction served", "request_id": "decbb66c63284ff5ac35f80282d1e4cf", "event": "prediction", "cache_status": "hit", "model_version": "tfidf-logreg@1.0.0+9cb76b11", "sentiment": "negative", "latency_ms": 0.75, "text_sha256": "2fe4398f3c67"}
@@ -326,7 +326,7 @@ One table, `predictions`, created by an Alembic migration (`backend/alembic/vers
 | `text` | TEXT | the submitted post (stripped) |
 | `text_sha256` | CHAR(64) | hash of the *normalised* text, used to count unique posts |
 | `sentiment` | VARCHAR(16) | CHECK in (`negative`, `neutral`, `positive`) |
-| `confidence` | DOUBLE | CHECK 0â€“1 |
+| `confidence` | DOUBLE | CHECK 0–1 |
 | `prob_negative`, `prob_neutral`, `prob_positive` | DOUBLE | full probability distribution |
 | `top_words` | JSONB | explanation shown in the UI |
 | `model_version` | VARCHAR(64) | e.g. `tfidf-logreg@1.0.0+9cb76b11` |
@@ -362,7 +362,7 @@ One table, `predictions`, created by an Alembic migration (`backend/alembic/vers
 
 **Why the normalised text?** The key contains exactly what determines the answer: the model version and the text *as the model sees it*. Posts that differ only in case, spacing, repeated punctuation or which brand they @mention share one entry, and a hit can never return a different answer than the model would. The SHA-256 keeps keys short and keeps raw user text out of key names.
 
-**What happens when the model is retrained?** The model version includes the first 8 characters of the model file's SHA-256 (`â€¦+9cb76b11`). A retrained model is a different file, so it gets a different version, even if nobody bumps `1.0.0`. Every key changes, the old entries are simply never read again, and they expire through the TTL. A change to the cleaning code bumps `PREPROCESSING_VERSION`, and the API refuses to serve a model trained with a different one, which forces a retrain and therefore new keys.
+**What happens when the model is retrained?** The model version includes the first 8 characters of the model file's SHA-256 (`…+9cb76b11`). A retrained model is a different file, so it gets a different version, even if nobody bumps `1.0.0`. Every key changes, the old entries are simply never read again, and they expire through the TTL. A change to the cleaning code bumps `PREPROCESSING_VERSION`, and the API refuses to serve a model trained with a different one, which forces a retrain and therefore new keys.
 
 ---
 
@@ -386,7 +386,7 @@ All configuration comes from environment variables. [`.env.example`](.env.exampl
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `â€¦@localhost:5432/sentiment` (compose sets `â€¦@db:5432/â€¦`) | SQLAlchemy URL (`postgres://` URLs from hosting providers are normalised) |
+| `DATABASE_URL` | `…@localhost:5432/sentiment` (compose sets `…@db:5432/…`) | SQLAlchemy URL (`postgres://` URLs from hosting providers are normalised) |
 | `REDIS_URL` | `redis://localhost:6379/0` (compose sets `redis://redis:6379/0`) | cache |
 | `MODEL_DIR` | `artifacts/models/tfidf-logreg-1.0.0` | model artifact to load |
 | `CACHE_ENABLED` / `CACHE_TTL_SECONDS` | `true` / `86400` | cache switch and lifetime |
@@ -405,7 +405,7 @@ All configuration comes from environment variables. [`.env.example`](.env.exampl
 | Suite | Command | Covers |
 |---|---|---|
 | ML (28 tests) | `pytest ml/tests` | every cleaning rule (negations kept, emoticons, emojis, idempotence), artifact repair, de-duplication and conflicting labels, stratified leakage-free deterministic split, model save/load, checksum and preprocessing-version guards, explanations |
-| API (85 tests) | `cd backend && pytest` | prediction responses; every validation error and its envelope; **cache-hit path** (miss â†’ hit, normalised variants hit, new model version misses, failures not cached, Redis down â†’ bypass, circuit breaker pauses Redis calls); history filters and pagination; analytics; batch; health states; migration â†” ORM consistency |
+| API (85 tests) | `cd backend && pytest` | prediction responses; every validation error and its envelope; **cache-hit path** (miss → hit, normalised variants hit, new model version misses, failures not cached, Redis down → bypass, circuit breaker pauses Redis calls); history filters and pagination; analytics; batch; health states; migration ↔ ORM consistency |
 | Frontend (22 tests) | `cd frontend && npm test` | sentiment and cache badges, form validation, error-envelope parsing, word highlighting |
 
 API tests run against a real PostgreSQL (with the Alembic migration applied), fakeredis and a small fixture model. Start a test database with `docker run -d -p 5433:5432 -e POSTGRES_USER=sentiment -e POSTGRES_PASSWORD=sentiment -e POSTGRES_DB=sentiment_test postgres:16-alpine`.
@@ -423,7 +423,7 @@ API tests run against a real PostgreSQL (with the Alembic migration applied), fa
 **Local:** `docker compose up --build` (above).
 
 **Hosted demo: https://sentiment-pulse-tawny.vercel.app.** The frontend runs on **Vercel**. The API, PostgreSQL and Key Value (Redis-compatible) run on **Render** ([render.yaml](render.yaml), Singapore region) at https://sentiment-pulse-api.onrender.com (API docs at `/docs`).
-1. **Render:** New â†’ Blueprint â†’ select this repository. This creates the API (built from `backend/Dockerfile`), a PostgreSQL database and a Key Value instance, and wires `DATABASE_URL` and `REDIS_URL`. Migrations run on start.
+1. **Render:** New → Blueprint → select this repository. This creates the API (built from `backend/Dockerfile`), a PostgreSQL database and a Key Value instance, and wires `DATABASE_URL` and `REDIS_URL`. Migrations run on start.
 2. **Vercel:** project root directory `frontend`, with `API_INTERNAL_URL=https://sentiment-pulse-api.onrender.com`. Next.js forwards `/api` and `/health` to it, so no CORS setup is needed. Deployed with `cd frontend && vercel deploy --prod`.
 
 Free-tier notes:
@@ -452,7 +452,7 @@ Free-tier notes:
 ## 15. Known limitations
 
 - **Domain:** trained on English tweets to six US airlines from February 2015. Macro-F1 drops to about 0.48 on general tweets, so the model needs re-training or at least re-evaluation for other brands, industries, languages or code-mixed text.
-- **Understanding:** a bag-of-words model adds up word weights. It does not understand sarcasm ("thanks for the robotic assistance" â†’ positive), irony, long-range negation, or posts that complain and then praise.
+- **Understanding:** a bag-of-words model adds up word weights. It does not understand sarcasm ("thanks for the robotic assistance" → positive), irony, long-range negation, or posts that complain and then praise.
 - **Mixed sentiment** is forced into one label; there is no *mixed* class or aspect-level sentiment.
 - **Label noise:** about a quarter of the labels have annotator confidence below 1.0, which caps measurable accuracy (89% on full-agreement tweets vs about 63% on low-agreement ones).
 - **Neutral** is the hardest class (F1 0.65): questions, information and mild opinions overlap.
@@ -492,18 +492,18 @@ Free-tier notes:
 
 ```
 sentiment-pulse/
-â”œâ”€â”€ ml/sentiment_ml/        # data, preprocessing (shared with the API), eda, experiments, evaluate,
-â”‚                           # error_analysis, explain, artifacts, inference, pipeline
-â”œâ”€â”€ ml/tests/
-â”œâ”€â”€ data/raw/               # Tweets.csv (+ licence/attribution); data/processed/ is generated
-â”œâ”€â”€ artifacts/models/       # tfidf-logreg-1.0.0/{model.joblib, metadata.json}
-â”œâ”€â”€ reports/                # eda.md, evaluation.md, dataset_bakeoff.md, figures/
-â”œâ”€â”€ backend/                # FastAPI app (api/, schemas/, services/, db/, core/), Alembic, tests, Dockerfile
-â”œâ”€â”€ frontend/               # Next.js app, components, lib/api.ts, tests, Dockerfile
-â”œâ”€â”€ scripts/dataset_bakeoff.py
-â”œâ”€â”€ docker-compose.yml      # + docker-compose.dev.yml (publishes db/redis ports for local dev)
-â”œâ”€â”€ render.yaml             # Render blueprint (API + PostgreSQL + Key Value)
-â””â”€â”€ .github/workflows/ci.yml
+├── ml/sentiment_ml/        # data, preprocessing (shared with the API), eda, experiments, evaluate,
+│                           # error_analysis, explain, artifacts, inference, pipeline
+├── ml/tests/
+├── data/raw/               # Tweets.csv (+ licence/attribution); data/processed/ is generated
+├── artifacts/models/       # tfidf-logreg-1.0.0/{model.joblib, metadata.json}
+├── reports/                # eda.md, evaluation.md, dataset_bakeoff.md, figures/
+├── backend/                # FastAPI app (api/, schemas/, services/, db/, core/), Alembic, tests, Dockerfile
+├── frontend/               # Next.js app, components, lib/api.ts, tests, Dockerfile
+├── scripts/dataset_bakeoff.py
+├── docker-compose.yml      # + docker-compose.dev.yml (publishes db/redis ports for local dev)
+├── render.yaml             # Render blueprint (API + PostgreSQL + Key Value)
+└── .github/workflows/ci.yml
 ```
 
 ---
