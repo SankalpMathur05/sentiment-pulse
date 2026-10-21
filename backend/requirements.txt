@@ -1,0 +1,19 @@
+# API runtime dependencies, pinned to exact versions for reproducible builds.
+# The model package itself is installed separately: `pip install ./ml` (see Dockerfile).
+fastapi==0.156.8
+pydantic==2.14.1
+pydantic-settings==2.16.1
+SQLAlchemy==2.1.5
+psycopg[binary]==3.3.6
+alembic==1.20.0
+redis==8.1.0
+python-multipart==0.0.32
+uvicorn[standard]==0.54.0
+
+# Model runtime: pinned to the versions the artifact was trained with. A pickled
+# scikit-learn pipeline is only guaranteed to load with the same scikit-learn version.
+scikit-learn==1.9.1
+numpy==2.5.4
+scipy==1.18.1
+joblib==1.6.0
+emoji==2.16.0
