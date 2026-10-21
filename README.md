@@ -1,4 +1,4 @@
-﻿# Sentiment Pulse
+# Sentiment Pulse
 
 **An AI-powered social media sentiment dashboard.** It classifies posts as **Positive**, **Negative** or **Neutral** with a model trained from scratch (TF-IDF + Logistic Regression), explains each prediction, stores every prediction in PostgreSQL, caches repeated requests in Redis, and summarises everything in a Next.js dashboard.
 
