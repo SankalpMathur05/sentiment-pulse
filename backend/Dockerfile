@@ -24,12 +24,13 @@ COPY artifacts/models/ /app/artifacts/models/
 COPY backend/alembic.ini ./
 COPY backend/alembic/ ./alembic/
 COPY backend/app/ ./app/
-COPY --chmod=755 backend/docker-entrypoint.sh ./
+COPY backend/docker-entrypoint.sh ./
 
 ENV MODEL_DIR=/app/artifacts/models/tfidf-logreg-1.0.0
 
 # Run as an unprivileged user: a compromised process cannot modify the image's files.
-RUN useradd --create-home --uid 10001 appuser
+# (chmod in a RUN step rather than COPY --chmod, which some hosted builders don't support.)
+RUN chmod 755 docker-entrypoint.sh && useradd --create-home --uid 10001 appuser
 USER appuser
 
 EXPOSE 8000
