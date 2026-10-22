@@ -515,6 +515,7 @@ I used **Claude Code (Anthropic)** as a pair programmer throughout:
 - to scaffold and write code for the ML pipeline, backend and frontend, plus tests and Docker/CI configuration
 - to draft this README and the reports
 - to research dataset licences
+- to script the demo video's screen recording (a Playwright script drives the app in Chrome); the narration is mine
 
 Commits made with its help carry a `Co-Authored-By` trailer.
 
