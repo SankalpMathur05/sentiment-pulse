@@ -422,9 +422,9 @@ API tests run against a real PostgreSQL (with the Alembic migration applied), fa
 
 **Local:** `docker compose up --build` (above).
 
-**Hosted demo: https://sentiment-pulse-tawny.vercel.app.** The frontend runs on **Vercel**. The API, PostgreSQL and Key Value (Redis-compatible) run on **Render** ([render.yaml](render.yaml), Singapore region) at https://sentiment-pulse-api.onrender.com (API docs at `/docs`).
+**Hosted demo: https://sentiment-pulse-tawny.vercel.app.** The frontend runs on **Vercel**. The API, PostgreSQL and Key Value (Redis-compatible) run on **Render** ([render.yaml](render.yaml), Singapore region) at https://sentiment-pulse-api-f18c.onrender.com (API docs at [`/docs`](https://sentiment-pulse-api-f18c.onrender.com/docs)).
 1. **Render:** New → Blueprint → select this repository. This creates the API (built from `backend/Dockerfile`), a PostgreSQL database and a Key Value instance, and wires `DATABASE_URL` and `REDIS_URL`. Migrations run on start.
-2. **Vercel:** project root directory `frontend`, with `API_INTERNAL_URL=https://sentiment-pulse-api.onrender.com`. Next.js forwards `/api` and `/health` to it, so no CORS setup is needed. Deployed with `cd frontend && vercel deploy --prod`.
+2. **Vercel:** project root directory `frontend`, with `API_INTERNAL_URL` set to the Render API's URL (shown on the service page; here `https://sentiment-pulse-api-f18c.onrender.com`). Next.js forwards `/api` and `/health` to it, so no CORS setup is needed. Deployed with `cd frontend && vercel deploy --prod`.
 
 Free-tier notes:
 - Render free web services sleep after about 15 minutes idle, so the first request can take up to a minute to wake the API.
