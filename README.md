@@ -406,7 +406,7 @@ All configuration comes from environment variables. [`.env.example`](.env.exampl
 |---|---|---|
 | ML (28 tests) | `pytest ml/tests` | every cleaning rule (negations kept, emoticons, emojis, idempotence), artifact repair, de-duplication and conflicting labels, stratified leakage-free deterministic split, model save/load, checksum and preprocessing-version guards, explanations |
 | API (85 tests) | `cd backend && pytest` | prediction responses; every validation error and its envelope; **cache-hit path** (miss → hit, normalised variants hit, new model version misses, failures not cached, Redis down → bypass, circuit breaker pauses Redis calls); history filters and pagination; analytics; batch; health states; migration ↔ ORM consistency |
-| Frontend (22 tests) | `cd frontend && npm test` | sentiment and cache badges, form validation, error-envelope parsing, word highlighting |
+| Frontend (25 tests) | `cd frontend && npm test` | sentiment and cache badges, form validation, error-envelope parsing, word highlighting, retry policy for a sleeping API |
 
 API tests run against a real PostgreSQL (with the Alembic migration applied), fakeredis and a small fixture model. Start a test database with `docker run -d -p 5433:5432 -e POSTGRES_USER=sentiment -e POSTGRES_PASSWORD=sentiment -e POSTGRES_DB=sentiment_test postgres:16-alpine`.
 
