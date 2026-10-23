@@ -427,7 +427,9 @@ API tests run against a real PostgreSQL (with the Alembic migration applied), fa
 2. **Vercel:** project root directory `frontend`, with `API_INTERNAL_URL` set to the Render API's URL (shown on the service page; here `https://sentiment-pulse-api-f18c.onrender.com`). Next.js forwards `/api` and `/health` to it, so no CORS setup is needed. Deployed with `cd frontend && vercel deploy --prod`.
 
 Free-tier notes:
-- Render free web services sleep after about 15 minutes idle, so the first request can take up to a minute to wake the API.
+- Render free web services sleep after about 15 minutes idle, and waking takes up to a minute. Two mitigations:
+  - A scheduled GitHub Actions workflow ([keep-warm.yml](.github/workflows/keep-warm.yml)) pings `/health/live` every 10 minutes.
+  - If the API is still asleep, the frontend keeps retrying with back-off for about a minute instead of failing, and the status pill shows "Waking up the API…".
 - Render's free PostgreSQL expires after 30 days.
 - The hosted demo is public, so it must not be used for sensitive text.
 
