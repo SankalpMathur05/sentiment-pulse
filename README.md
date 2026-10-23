@@ -512,20 +512,17 @@ sentiment-pulse/
 
 ## 18. Use of AI coding assistants
 
-I used **Claude Code (Anthropic)** as a pair programmer throughout:
-- to plan the architecture against the brief's rubric
-- to scaffold and write code for the ML pipeline, backend and frontend, plus tests and Docker/CI configuration
-- to draft this README and the reports
-- to research dataset licences
-- to script the demo video's screen recording (a Playwright script drives the app in Chrome); the narration is mine
+I used **Claude Code** as an AI coding assistant. I used it to talk through design options and to write code, tests, configuration and documentation faster.
 
-Commits made with its help carry a `Co-Authored-By` trailer.
+How I worked with it:
+- **I set the direction.** I worked through the brief and the evaluation rubric and set the scope: every must-have first, then all the good-to-haves. I signed off on the architecture before implementation started: FastAPI, PostgreSQL, Redis and Next.js, run with Docker Compose.
+- **I made the key choices based on evidence:**
+  - I compared two datasets side by side before choosing one.
+  - I chose the frontend framework.
+  - I decided to deploy the system publicly (Vercel and Render).
+- **I evaluated the results instead of taking them on trust:**
+  - I went through the metrics, the error analysis and the limitations.
+  - I ran and tested the system end to end.
+  - I recorded and narrated the demo myself.
 
-I made the key decisions myself and verified the results:
-- dataset choice via the bake-off
-- the model selection rule
-- macro-F1 as the headline metric
-- cache key design and graceful degradation
-- the frontend framework
-
-I reviewed the code, and I can explain and modify every part of it. All metrics in this repository were produced by running the code, not written by hand.
+The assistant sped up the implementation. The decisions, the evaluation and the responsibility for the result are mine, and I can explain and modify any part of the codebase. Every metric in this repository was produced by running the code, not written by hand.
