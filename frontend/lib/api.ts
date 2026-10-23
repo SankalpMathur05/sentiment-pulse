@@ -42,6 +42,14 @@ export class ApiError extends Error {
   }
 }
 
+/** The backend couldn't be reached at all, e.g. a free-tier host waking up or restarting. */
+export function isUnreachable(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.code === "API_UNREACHABLE" || error.code === "NETWORK_ERROR")
+  );
+}
+
 function isErrorEnvelope(body: unknown): body is ApiErrorEnvelope {
   if (typeof body !== "object" || body === null || !("error" in body)) return false;
   const error = (body as { error: unknown }).error;

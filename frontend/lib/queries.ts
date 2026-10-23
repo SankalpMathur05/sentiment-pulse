@@ -1,11 +1,13 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import {
+  ApiError,
   getAnalyticsSummary,
   getCacheStats,
   getHealth,
   getModelInfo,
   getPrediction,
   getPredictions,
+  isUnreachable,
 } from "./api";
 import { dateRangeError, toApiParams, type Filters } from "./filters";
 
@@ -29,12 +31,23 @@ export const PREDICTION_DEPENDENT_KEYS = [
 
 const DASHBOARD_REFRESH_MS = 20_000;
 
+// The hosted API sleeps when idle (free plan) and needs up to a minute to wake up, so an
+// unreachable API is retried with back-off (1, 2, 4, 8, 16, 30 s) instead of showing an error
+// at once. Other server errors get one retry; a 4xx won't fix itself.
+export const WAKE_UP_RETRIES = 6;
+
+export function shouldRetry(failureCount: number, error: unknown): boolean {
+  if (isUnreachable(error)) return failureCount < WAKE_UP_RETRIES;
+  if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false;
+  return failureCount < 1;
+}
+
 export function healthQuery() {
   return queryOptions({
     queryKey: queryKeys.health,
     queryFn: ({ signal }) => getHealth(signal),
     refetchInterval: 30_000,
-    retry: false,
+    retry: shouldRetry,
   });
 }
 

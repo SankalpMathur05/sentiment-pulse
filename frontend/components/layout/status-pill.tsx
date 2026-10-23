@@ -22,16 +22,32 @@ export function StatusPillSkeleton() {
   return <Skeleton className="h-7 w-9 rounded-full sm:w-48" />;
 }
 
+/** Shown while the first health check is being retried, e.g. the hosted API is waking up. */
+function WakingPill() {
+  return (
+    <span
+      role="status"
+      title="The free hosting plan pauses the API when it's idle. Starting it again takes up to a minute."
+      className="inline-flex h-7 items-center gap-2 rounded-full border px-2.5 text-sm text-muted-foreground"
+    >
+      <span className="size-2 animate-pulse rounded-full bg-status-warn ring-3 ring-status-warn/25" />
+      <span className="hidden sm:inline">Waking up the API…</span>
+    </span>
+  );
+}
+
 /** Live API health in the top bar; polls /health every 30 s. */
 export function StatusPill() {
-  const { data, error, isPending, isFetching, refetch, dataUpdatedAt, errorUpdatedAt } =
-    useQuery(healthQuery());
-
-  if (isPending) return <StatusPillSkeleton />;
+  const health = useQuery(healthQuery());
+  if (health.isPending) {
+    return health.failureCount > 0 ? <WakingPill /> : <StatusPillSkeleton />;
+  }
+  const { isFetching, refetch, dataUpdatedAt, errorUpdatedAt } = health;
 
   // If the latest check failed, older data can't be trusted: report the outage.
-  const level: HealthStatus = error ? "down" : data.status;
-  const label = error ? "API unreachable" : LEVELS[level].label;
+  const report = health.error ? undefined : health.data;
+  const level: HealthStatus = report ? report.status : "down";
+  const label = report ? LEVELS[level].label : "API unreachable";
   const checkedAt = new Date(Math.max(dataUpdatedAt, errorUpdatedAt)).toISOString();
 
   return (
@@ -65,7 +81,7 @@ export function StatusPill() {
             <RotateCw className={cn(isFetching && "animate-spin")} />
           </Button>
         </div>
-        {error ? <UnreachableDetails error={error} /> : <HealthDetails report={data} />}
+        {report ? <HealthDetails report={report} /> : <UnreachableDetails error={health.error} />}
       </PopoverContent>
     </Popover>
   );

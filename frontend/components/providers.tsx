@@ -4,18 +4,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ApiError } from "@/lib/api";
+import { isUnreachable } from "@/lib/api";
+import { shouldRetry } from "@/lib/queries";
 
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
-      queries: {
-        staleTime: 10_000,
-        // A 4xx won't fix itself on retry; a network blip or 5xx might.
-        retry: (failureCount, error) =>
-          !(error instanceof ApiError && error.status >= 400 && error.status < 500) &&
-          failureCount < 1,
-      },
+      queries: { staleTime: 10_000, retry: shouldRetry },
+      // A request that never reached the API (e.g. it was waking up) is safe to send again.
+      mutations: { retry: (failureCount, error) => isUnreachable(error) && failureCount < 3 },
     },
   });
 }
